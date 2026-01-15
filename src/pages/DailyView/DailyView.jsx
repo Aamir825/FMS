@@ -168,7 +168,7 @@ export function DailyView() {
   return (
     <div className="space-y-6">
       {/* Header with Date */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Daily Report</h1>
           <p className="text-gray-600">Track your daily sales and expenses</p>
@@ -223,7 +223,7 @@ export function DailyView() {
                   key={date.toString()}
                   onClick={() => setSelectedDate(date)}
                   className={cn(
-                    "flex flex-col items-center justify-center w-16 py-2 rounded-full transition-all duration-200 shrink-0 mx-1",
+                    "flex flex-col items-center justify-center md:w-16 w-10 md:py-2 py-1 rounded-full transition-all duration-200 shrink-0 mx-1",
                     isSelected 
                       ? "bg-blue-600 text-primary-foreground shadow-md" 
                       : hasData 
@@ -232,13 +232,13 @@ export function DailyView() {
                   )}
                 >
                   <div className={cn(
-                    "text-xs font-medium mb-1",
+                    "text-xs font-medium md:mb-1 mb-0",
                     isSelected ? "text-primary-foreground/80" : "text-gray-500"
                   )}>
                     {format(date, 'EEE')}
                   </div>
                   <div className={cn(
-                    "text-lg font-bold",
+                    "md:text-lg text-xs font-bold",
                     isSelected ? "text-primary-foreground" : "text-gray-900"
                   )}>
                     {format(date, 'd')}

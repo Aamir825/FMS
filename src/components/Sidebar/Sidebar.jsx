@@ -42,23 +42,12 @@ const Sidebar = () => {
       <div className="p-6 border-b">
         <div className="space-y-4">
           <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center">
+            <div className="h-12 w-12 rounded-2xl bg-linear-to-br from-orange-500 to-amber-500 flex items-center justify-center">
               <span className="text-2xl">🍛</span>
             </div>
             <div>
               <h2 className="font-bold text-lg">Biryani Shop</h2>
               <p className="text-xs text-muted-foreground">Since 2023</p>
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Today's Sales</span>
-              <span className="font-bold text-primary">₨ 12,500</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Today's Expenses</span>
-              <span className="font-bold text-red-500">₨ 8,200</span>
             </div>
           </div>
         </div>
@@ -97,32 +86,11 @@ const Sidebar = () => {
             </NavLink>
           ))}
         </div>
-
-        {/* Quick Actions */}
-        <div className="mt-8">
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-3">
-            Quick Actions
-          </h3>
-          <div className="grid grid-cols-2 gap-2">
-            {quickActions.map((action) => (
-              <Button
-                key={action.label}
-                variant="outline"
-                className="h-auto flex-col gap-2 py-3 hover:bg-accent/50"
-              >
-                <div className={`h-8 w-8 rounded-full ${action.color} flex items-center justify-center text-white`}>
-                  {action.icon}
-                </div>
-                <span className="text-xs">{action.label}</span>
-              </Button>
-            ))}
-          </div>
-        </div>
       </nav>
 
       {/* Sidebar Footer */}
       <div className="border-t p-4">
-        <div className="rounded-lg bg-gradient-to-r from-orange-50 to-amber-50 p-4 border border-orange-200">
+        <div className="rounded-lg bg-linear-to-r from-orange-50 to-amber-50 p-4 border border-orange-200">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
               <span className="text-primary">🏆</span>

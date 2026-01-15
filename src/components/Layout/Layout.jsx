@@ -6,15 +6,15 @@ import Footer from '../Footer/Footer';
 
 const Layout = () => {
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <div className="flex">
-        <Sidebar />
-        <main className="flex-1 p-6">
+    <div className="flex h-screen bg-background">
+      <Sidebar />
+      <div className="flex flex-col flex-1">
+        <Header />
+        <main className="relative flex-1 overflow-y-auto p-4">
           <Outlet />
+          <Footer />
         </main>
       </div>
-      <Footer />
     </div>
   );
 };

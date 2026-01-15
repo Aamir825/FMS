@@ -17,7 +17,7 @@ const Header = () => {
   });
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Left: Logo & Date */}
@@ -32,7 +32,7 @@ const Header = () => {
               <SheetContent side="left" className="w-64">
                 <div className="mt-6 space-y-4">
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center">
+                    <div className="h-10 w-10 rounded-xl bg-linear-to-br from-orange-500 to-amber-500 flex items-center justify-center">
                       <span className="text-xl">🍛</span>
                     </div>
                     <div>
@@ -43,23 +43,21 @@ const Header = () => {
                 </div>
               </SheetContent>
             </Sheet>
+             {/* Shop Brand (Always Visible) */}
+  <div className="md:hidden flex items-center gap-3">
+    <div className="h-6 w-6 rounded-sm bg-orange-500 flex items-center justify-center">
+      <span className="text-sm">🍛</span>
+    </div>
 
-            {/* Logo */}
-            <div className="hidden lg:flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center">
-                <span className="text-xl">🍛</span>
-              </div>
-              <div>
-                <h1 className="text-lg font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
-                  Biryani & Burger Shop
-                </h1>
-                <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <Calendar className="h-3 w-3" />
-                  <span>{formattedDate}</span>
-                </div>
-              </div>
-            </div>
-
+    <div className="">
+      <h1 className="text-xs font-bold leading-none">
+        Biryani 🍔 Burger
+      </h1>
+      <p className="text-xs text-muted-foreground">
+        Shop
+      </p>
+    </div>
+  </div>
             {/* Desktop Date Display */}
             <div className="hidden lg:flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-lg">
               <Calendar className="h-4 w-4 text-primary" />
