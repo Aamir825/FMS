@@ -184,7 +184,7 @@ export function DailyView() {
 
       {/* Horizontal Calendar - Like Infinix Health App */}
       <Card>
-        <CardContent className="p-4">
+        <CardContent className="py-4 px-2 w-full">
           <div className="flex items-center justify-between mb-4">
             <Button
               variant="ghost"

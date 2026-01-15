@@ -4,12 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Home, 
-  Package, 
-  Flame, 
-  CreditCard, 
-  BarChart3, 
+import {
+  Home,
+  Package,
+  Flame,
+  CreditCard,
+  BarChart3,
   Settings,
   Users,
   ShoppingCart
@@ -66,41 +66,39 @@ const Header = () => {
                 </div>
 
                 {/* Navigation */}
-  <nav className="p-4 space-y-1">
-    {menuItems.map((item) => (
-      <NavLink
-        key={item.path}
-        to={item.path}
-        onClick={() => setIsMenuOpen(false)}
-        className={({ isActive }) =>
-          `flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
-            isActive
-              ? 'bg-primary text-primary-foreground'
-              : 'hover:bg-accent'
-          }`
-        }
-      >
-        <div className="flex items-center gap-3">
-          <item.icon className="h-4 w-4" />
-          {item.label}
-        </div>
+                <nav className="p-4 space-y-1">
+                  {menuItems.map((item) => (
+                    <NavLink
+                      key={item.path}
+                      to={item.path}
+                      onClick={() => setIsMenuOpen(false)}
+                      className={({ isActive }) =>
+                        `flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${isActive
+                          ? 'bg-primary text-primary-foreground'
+                          : 'hover:bg-accent'
+                        }`
+                      }
+                    >
+                      <div className="flex items-center gap-3">
+                        <item.icon className="h-4 w-4" />
+                        {item.label}
+                      </div>
 
-        {item.badge && (
-          <span
-            className={`text-xs px-2 py-0.5 rounded-full ${
-              item.badge === 'New'
-                ? 'bg-green-100 text-green-800'
-                : item.badge === '!'
-                ? 'bg-red-100 text-red-800'
-                : 'bg-primary/10 text-primary'
-            }`}
-          >
-            {item.badge}
-          </span>
-        )}
-      </NavLink>
-    ))}
-  </nav>
+                      {item.badge && (
+                        <span
+                          className={`text-xs px-2 py-0.5 rounded-full ${item.badge === 'New'
+                              ? 'bg-green-100 text-green-800'
+                              : item.badge === '!'
+                                ? 'bg-red-100 text-red-800'
+                                : 'bg-primary/10 text-primary'
+                            }`}
+                        >
+                          {item.badge}
+                        </span>
+                      )}
+                    </NavLink>
+                  ))}
+                </nav>
               </SheetContent>
             </Sheet>
             {/* Shop Brand (Always Visible) */}
