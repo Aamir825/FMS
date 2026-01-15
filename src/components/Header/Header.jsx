@@ -4,8 +4,31 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
+import { 
+  Home, 
+  Package, 
+  Flame, 
+  CreditCard, 
+  BarChart3, 
+  Settings,
+  Users,
+  ShoppingCart
+} from 'lucide-react';
+import { NavLink } from 'react-router-dom';
 
 const Header = () => {
+  const menuItems = [
+    { path: '/', icon: Home, label: 'Dashboard', badge: null },
+    { path: '/daily', icon: Calendar, label: 'Daily View', badge: null },
+    { path: '/sales', icon: DollarSign, label: 'Sales', badge: 'New' },
+    { path: '/expenses', icon: ShoppingCart, label: 'Expenses', badge: null },
+    { path: '/inventory', icon: Package, label: 'Inventory', badge: '2' },
+    { path: '/gas', icon: Flame, label: 'Gas Tracker', badge: '!' },
+    { path: '/loans', icon: CreditCard, label: 'Loans', badge: null },
+    { path: '/staff', icon: Users, label: 'Staff Payments', badge: null },
+    { path: '/reports', icon: BarChart3, label: 'Reports', badge: null },
+    { path: '/settings', icon: Settings, label: 'Settings', badge: null },
+  ];
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const today = new Date();
@@ -41,23 +64,60 @@ const Header = () => {
                     </div>
                   </div>
                 </div>
+
+                {/* Navigation */}
+  <nav className="p-4 space-y-1">
+    {menuItems.map((item) => (
+      <NavLink
+        key={item.path}
+        to={item.path}
+        onClick={() => setIsMenuOpen(false)}
+        className={({ isActive }) =>
+          `flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+            isActive
+              ? 'bg-primary text-primary-foreground'
+              : 'hover:bg-accent'
+          }`
+        }
+      >
+        <div className="flex items-center gap-3">
+          <item.icon className="h-4 w-4" />
+          {item.label}
+        </div>
+
+        {item.badge && (
+          <span
+            className={`text-xs px-2 py-0.5 rounded-full ${
+              item.badge === 'New'
+                ? 'bg-green-100 text-green-800'
+                : item.badge === '!'
+                ? 'bg-red-100 text-red-800'
+                : 'bg-primary/10 text-primary'
+            }`}
+          >
+            {item.badge}
+          </span>
+        )}
+      </NavLink>
+    ))}
+  </nav>
               </SheetContent>
             </Sheet>
-             {/* Shop Brand (Always Visible) */}
-  <div className="md:hidden flex items-center gap-3">
-    <div className="h-6 w-6 rounded-sm bg-orange-500 flex items-center justify-center">
-      <span className="text-sm">🍛</span>
-    </div>
+            {/* Shop Brand (Always Visible) */}
+            <div className="md:hidden flex items-center gap-3">
+              <div className="h-6 w-6 rounded-sm bg-orange-500 flex items-center justify-center">
+                <span className="text-sm">🍛</span>
+              </div>
 
-    <div className="">
-      <h1 className="text-xs font-bold leading-none">
-        Biryani 🍔 Burger
-      </h1>
-      <p className="text-xs text-muted-foreground">
-        Shop
-      </p>
-    </div>
-  </div>
+              <div className="">
+                <h1 className="text-xs font-bold leading-none">
+                  Biryani 🍔 Burger
+                </h1>
+                <p className="text-xs text-muted-foreground">
+                  Shop
+                </p>
+              </div>
+            </div>
             {/* Desktop Date Display */}
             <div className="hidden lg:flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-lg">
               <Calendar className="h-4 w-4 text-primary" />
