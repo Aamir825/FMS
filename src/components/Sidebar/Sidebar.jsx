@@ -87,22 +87,6 @@ const Sidebar = () => {
           ))}
         </div>
       </nav>
-
-      {/* Sidebar Footer */}
-      <div className="border-t p-4">
-        <div className="rounded-lg bg-linear-to-r from-orange-50 to-amber-50 p-4 border border-orange-200">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <span className="text-primary">🏆</span>
-            </div>
-            <div>
-              <p className="text-sm font-medium">Best Day This Week</p>
-              <p className="text-2xl font-bold text-primary">₨ 15,800</p>
-              <p className="text-xs text-muted-foreground">Wednesday • 38% profit</p>
-            </div>
-          </div>
-        </div>
-      </div>
     </aside>
   );
 };

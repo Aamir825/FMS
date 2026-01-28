@@ -7,45 +7,55 @@ import { Sales } from './pages/Sales/Sales'
 import { Expenses } from './pages/Expenses/Expenses'
 import { GasTracker } from './pages/GasTracker/GasTracker'
 import { Loans } from './pages/Loans/Loans'
+import Login from './pages/Login/Login'
+import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute'
+import { ToastContainer } from 'react-toastify'
 // import './App.css'
 
 function App() {
 
   const router = createBrowserRouter([
     {
+      path: "/login",
+      element: <Login />
+    },
+    {
       path: "",
-      element: <Layout/>,
+      element: <ProtectedRoute><Layout /></ProtectedRoute>,
       children: [
         {
           path: "/",
-          element: <Dashboard/>
+          element: <Dashboard />
         },
         {
           path: "daily",
-          element: <DailyView/>
+          element: <DailyView />
         },
         {
           path: "sales",
-          element: <Sales/>
+          element: <Sales />
         },
         {
           path: "expenses",
-          element: <Expenses/>
+          element: <Expenses />
         },
         {
           path: "gas",
-          element: <GasTracker/>
+          element: <GasTracker />
         },
         {
           path: "loans",
-          element: <Loans/>
+          element: <Loans />
         }
       ]
     }
   ])
 
   return (
-    <RouterProvider router={router}/>
+    <>
+      <RouterProvider router={router} />
+      <ToastContainer />
+    </>
   )
 }
 
