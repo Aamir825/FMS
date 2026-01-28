@@ -78,7 +78,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50">
+    <div className="min-h-screen bg-linear-to-br from-orange-50 via-amber-50 to-yellow-50">
       {/* Background Pattern */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-orange-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
@@ -90,11 +90,11 @@ const Login = () => {
         {/* Header Logo */}
         <div className="mb-8 text-center">
           <Link to="/" className="inline-flex items-center gap-3">
-            <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow-lg">
+            <div className="h-14 w-14 rounded-2xl bg-linear-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow-lg">
               <ChefHat className="h-8 w-8 text-white" />
             </div>
             <div className="text-left">
-              <h1 className="md:text-3xl text-xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
+              <h1 className="md:text-3xl text-xl font-bold bg-linear-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
                 Biryani Shop Pro
               </h1>
               <p className="text-sm text-muted-foreground">Management System</p>
@@ -189,7 +189,7 @@ const Login = () => {
               {/* Login Button */}
               <Button 
                 type="submit" 
-                className="w-full h-11 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600"
+                className="w-full h-11 bg-linear-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600"
                 disabled={loading}
               >
                 {loading ? (
