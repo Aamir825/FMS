@@ -116,7 +116,6 @@ const Login = () => {
               {/* Username Field */}
               <div className="space-y-2">
                 <Label htmlFor="username" className="flex items-center gap-2">
-                  <User className="h-4 w-4" />
                   Username
                 </Label>
                 <div className="relative">
@@ -137,7 +136,6 @@ const Login = () => {
               {/* Password Field */}
               <div className="space-y-2">
                 <Label htmlFor="password" className="flex items-center gap-2">
-                  <Lock className="h-4 w-4" />
                   Password
                 </Label>
                 <div className="relative">
