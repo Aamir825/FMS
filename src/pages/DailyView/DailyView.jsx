@@ -212,7 +212,7 @@ export function DailyView() {
           </div>
 
           {/* Date Pills */}
-          <div className="flex justify-between overflow-x-auto pb-2 -mx-2 px-2">
+          <div className="flex justify-between overflow-x-auto pb-2 -mx-4 px-2">
             {weekDates.map((date) => {
               const dateData = getDailyData(date);
               const isSelected = isSameDay(date, selectedDate);
