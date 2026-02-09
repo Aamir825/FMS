@@ -50,7 +50,7 @@ const Login = () => {
             toast.success("Login successful!");
 
             // Store UID locally so user stays logged in
-            localStorage.setItem("adminUID", uid);
+            localStorage.setItem("adminsUID", uid);
 
             // Redirect
             navigate("/");

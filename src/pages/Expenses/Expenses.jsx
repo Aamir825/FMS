@@ -7,96 +7,78 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-
-// Expense categories
-const DEFAULT_EXPENSE_CATEGORIES = [
-  { key: 'chicken', name: 'Chicken', icon: '🍗', color: 'bg-red-100 text-red-800' },
-  { key: 'rice', name: 'Rice', icon: '🍚', color: 'bg-white text-gray-800' },
-  { key: 'ghee', name: 'Ghee', icon: '🫕', color: 'bg-yellow-100 text-yellow-800' },
-  { key: 'milk', name: 'Milk', icon: '🥛', color: 'bg-white text-gray-800' },
-  { key: 'vegetables', name: 'Vegetables', icon: '🥬', color: 'bg-green-100 text-green-800' },
-  { key: 'salan', name: 'Salan', icon: '🍛', color: 'bg-orange-100 text-orange-800' },
-  { key: 'spices', name: 'Spices', icon: '🧂', color: 'bg-brown-100 text-brown-800' },
-  { key: 'bread', name: 'Bread', icon: '🍞', color: 'bg-amber-100 text-amber-800' }
-];
-
-// Staff members
-const DEFAULT_STAFF_MEMBERS = [
-  { key: 'rafeePayment', name: 'Rafee', icon: '👨‍🍳', color: 'bg-blue-100 text-blue-800' },
-  { key: 'adilPayment', name: 'Adil', icon: '👨‍💼', color: 'bg-indigo-100 text-indigo-800' },
-  { key: 'aamirPayment', name: 'Aamir', icon: '👨‍🔧', color: 'bg-purple-100 text-purple-800' },
-  { key: 'yaseenPayment', name: 'Yaseen', icon: '🧑‍🍳', color: 'bg-pink-100 text-pink-800' }
-];
-
-// Other expenses
-const OTHER_EXPENSES = [
-  { key: 'gasRefill', name: 'Gas Refill', icon: '🔥', color: 'bg-red-100 text-red-800' },
-  { key: 'coldDrinksPurchase', name: 'Cold Drinks', icon: '🥤', color: 'bg-blue-100 text-blue-800' },
-  { key: 'electricity', name: 'Electricity', icon: '💡', color: 'bg-yellow-100 text-yellow-800' },
-  { key: 'rent', name: 'Rent', icon: '🏠', color: 'bg-gray-100 text-gray-800' },
-  { key: 'utilities', name: 'Utilities', icon: '💧', color: 'bg-cyan-100 text-cyan-800' },
-  { key: 'maintenance', name: 'Maintenance', icon: '🔧', color: 'bg-orange-100 text-orange-800' },
-  { key: 'transport', name: 'Transport', icon: '🚚', color: 'bg-green-100 text-green-800' },
-  { key: 'other', name: 'Other Expenses', icon: '📝', color: 'bg-gray-100 text-gray-800' }
-];
-
-// Mock data for existing expenses
-const mockExistingExpenses = {
-  '2024-01-15': { // Today's date
-    chicken: 3500,
-    rice: 1200,
-    ghee: 800,
-    milk: 600,
-    vegetables: 900,
-    salan: 450,
-    spices: 300,
-    bread: 250,
-    rafeePayment: 800,
-    adilPayment: 700,
-    aamirPayment: 600,
-    yaseenPayment: 500,
-    gasRefill: 1200,
-    coldDrinksPurchase: 450,
-    electricity: 1200,
-    rent: 5000,
-    utilities: 400,
-    maintenance: 300,
-    transport: 200,
-    other: 1500
-  },
-  '2024-01-14': { // Yesterday
-    chicken: 3200,
-    rice: 1100,
-    ghee: 750,
-    milk: 550,
-    vegetables: 850,
-    salan: 400,
-    spices: 280,
-    bread: 220,
-    rafeePayment: 800,
-    adilPayment: 700,
-    aamirPayment: 600,
-    yaseenPayment: 500,
-    gasRefill: 0,
-    coldDrinksPurchase: 380,
-    electricity: 1200,
-    rent: 5000,
-    utilities: 400,
-    maintenance: 0,
-    transport: 180,
-    other: 1200
-  }
-};
+import { addDoc, collection } from "firebase/firestore";
+import { db } from "@/firebase/firebaseConfig";
+import { toast } from "react-toastify";
 
 export function Expenses() {
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [values, setValues] = useState({});
   const [isLoading, setIsLoading] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false);
+  const adminsUID = localStorage.getItem("adminsUID");
+  const [expenses, setExpenses] = useState({
+    biryani: "",
+    ghee: "",
+    milk: "",
+    vegetables: "",
+    salan: "",
+    burgerbread: "",
+    shwarmabread: "",
+    kebab: "",
+    chickenPaste: "",
+    coldDrinks: "",
+    rafeePayment: "",
+    adilPayment: "",
+    aamirPayment: "",
+    electricity: "",
+    disposableItems: "",
+    maintenance: "",
+    bikeFuel: "",
+    securityguard: "",
+    other: ""
+  });
 
-  // Format date key for storage
-  const getDateKey = (date) => {
-    return format(date, 'yyyy-MM-dd');
+  // Handle input change
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setExpenses(prev => ({ ...prev, [name]: value === "" ? "" : Number(value) }));
+  };
+
+  // Handle form submit
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      setIsLoading(true);
+      await addDoc(collection(db, "admin", adminsUID, "expenses"), {
+        date: selectedDate,
+        ...expenses
+      });
+      toast.success("Expenses data saved successfully!");
+      setExpenses({
+        biryani: "",
+        ghee: "",
+        milk: "",
+        vegetables: "",
+        salan: "",
+        burgerbread: "",
+        shwarmabread: "",
+        kebab: "",
+        chickenPaste: "",
+        coldDrinks: "",
+        rafeePayment: "",
+        adilPayment: "",
+        aamirPayment: "",
+        electricity: "",
+        disposableItems: "",
+        maintenance: "",
+        bikeFuel: "",
+        securityguard: "",
+        other: ""
+      });
+    } catch (error) {
+      console.error("Error saving expenses data: ", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Format date for display
@@ -109,91 +91,17 @@ export function Expenses() {
     return `Rs ${amount.toLocaleString('en-IN')}`;
   };
 
-  // Get expenses for selected date
-  const getExpensesForDate = (date) => {
-    const key = getDateKey(date);
-    return mockExistingExpenses[key] || null;
-  };
-
-  // Save expenses data
-  const saveExpenses = (dateKey, data) => {
-    setIsLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      console.log('Saving expenses:', { dateKey, data });
-      
-      // In real app, save to database/context
-      // mockExistingExpenses[dateKey] = data;
-      
-      setIsLoading(false);
-      setSaveSuccess(true);
-      
-      // Reset success message after 3 seconds
-      setTimeout(() => setSaveSuccess(false), 3000);
-    }, 500);
-  };
-
-  // Load existing expenses on date change
-  useEffect(() => {
-    const existingExpenses = getExpensesForDate(selectedDate);
-    const initialValues = {};
-    
-    // Combine all categories
-    const allCategories = [
-      ...DEFAULT_EXPENSE_CATEGORIES,
-      ...DEFAULT_STAFF_MEMBERS,
-      ...OTHER_EXPENSES
-    ];
-    
-    allCategories.forEach(category => {
-      initialValues[category.key] = existingExpenses?.[category.key] || 0;
-    });
-    
-    setValues(initialValues);
-  }, [selectedDate]);
-
-  // Handle input change
-  const handleChange = (key, value) => {
-    const numValue = parseFloat(value) || 0;
-    setValues(prev => ({ ...prev, [key]: numValue }));
-    setSaveSuccess(false); // Clear success message when editing
-  };
-
   // Calculate total
-  const total = Object.values(values).reduce((sum, val) => sum + val, 0);
-
-  // Handle form submit
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    saveExpenses(getDateKey(selectedDate), values);
-  };
-
-  // Handle date navigation
-  const goToPreviousDay = () => {
-    const newDate = new Date(selectedDate);
-    newDate.setDate(newDate.getDate() - 1);
-    setSelectedDate(newDate);
-  };
-
-  const goToNextDay = () => {
-    const newDate = new Date(selectedDate);
-    newDate.setDate(newDate.getDate() + 1);
-    setSelectedDate(newDate);
-  };
-
-  const goToToday = () => {
-    setSelectedDate(new Date());
-  };
+  const total = expenses ? Object.values(expenses)?.reduce((sum, val) => sum + (Number(val) || 0), 0) : 0;
 
   // Check if selected date is today
   const isToday = format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
 
   // Calculate category totals
   const categoryTotals = {
-    INGREDIENTS: DEFAULT_EXPENSE_CATEGORIES.reduce((sum, cat) => sum + (values[cat.key] || 0), 0),
-    STAFF: DEFAULT_STAFF_MEMBERS.reduce((sum, staff) => sum + (values[staff.key] || 0), 0),
-    OTHER: OTHER_EXPENSES.reduce((sum, exp) => sum + (values[exp.key] || 0), 0)
+    INGREDIENTS: Number(expenses.biryani) + Number(expenses.ghee) + Number(expenses.milk) + Number(expenses.vegetables) + Number(expenses.salan) + Number(expenses.burgerbread) + Number(expenses.shwarmabread) + Number(expenses.kebab) + Number(expenses.chickenPaste) + Number(expenses.coldDrinks),
+    STAFF: Number(expenses.rafeePayment) + Number(expenses.adilPayment) + Number(expenses.aamirPayment),
+    OTHER: Number(expenses.electricity) + Number(expenses.disposableItems) + Number(expenses.maintenance) + Number(expenses.bikeFuel) + Number(expenses.securityguard) + Number(expenses.other)
   };
 
   return (
@@ -222,29 +130,196 @@ export function Expenses() {
                 <span>Ingredients</span>
               </h4>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {DEFAULT_EXPENSE_CATEGORIES.map(category => (
-                  <div key={category.key} className="space-y-1">
-                    <Label htmlFor={category.key} className="text-xs flex items-center gap-1">
-                      <span>{category.icon}</span>
-                      <span>{category.name}</span>
-                    </Label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">
-                        Rs
-                      </span>
-                      <Input
-                        id={category.key}
-                        type="number"
-                        min="0"
-                        step="1"
-                        value={values[category.key] || ''}
-                        onChange={(e) => handleChange(category.key, e.target.value)}
-                        placeholder="0"
-                        className="pl-8 font-mono text-sm py-2 h-10"
-                      />
-                    </div>
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <span className="text-xl">🍛</span>
+                    <span className="font-medium text-gray-900">Biryani</span>
+                  </Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                      Rs
+                    </span>
+                    <Input
+                      type="number"
+                      name="biryani"
+                      value={expenses.biryani}
+                      onChange={handleChange}
+                      placeholder="0"
+                      className="pl-8 font-mono text-lg py-6"
+                    />
                   </div>
-                ))}
+                </div>
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <span className="text-xl">🧈</span>
+                    <span className="font-medium text-gray-900">Ghee</span>
+                  </Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                      Rs
+                    </span>
+                    <Input
+                      type="number"
+                      name="ghee"
+                      value={expenses.ghee}
+                      onChange={handleChange}
+                      placeholder="0"
+                      className="pl-8 font-mono text-lg py-6"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <span className="text-xl">🥛</span>
+                    <span className="font-medium text-gray-900">Milk</span>
+                  </Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                      Rs
+                    </span>
+                    <Input
+                      type="number"
+                      name="milk"
+                      value={expenses.milk}
+                      onChange={handleChange}
+                      placeholder="0"
+                      className="pl-8 font-mono text-lg py-6"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <span className="text-xl">🥬</span>
+                    <span className="font-medium text-gray-900">Vegetables</span>
+                  </Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                      Rs
+                    </span>
+                    <Input
+                      type="number"
+                      name="vegetables"
+                      value={expenses.vegetables}
+                      onChange={handleChange}
+                      placeholder="0"
+                      className="pl-8 font-mono text-lg py-6"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <span className="text-xl">🍛</span>
+                    <span className="font-medium text-gray-900">Salan</span>
+                  </Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                      Rs
+                    </span>
+                    <Input
+                      type="number"
+                      name="salan"
+                      value={expenses.salan}
+                      onChange={handleChange}
+                      placeholder="0"
+                      className="pl-8 font-mono text-lg py-6"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <span className="text-xl">🍞</span>
+                    <span className="font-medium text-gray-900">Burger Bread</span>
+                  </Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                      Rs
+                    </span>
+                    <Input
+                      type="number"
+                      name="burgerbread"
+                      value={expenses.burgerbread}
+                      onChange={handleChange}
+                      placeholder="0"
+                      className="pl-8 font-mono text-lg py-6"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <span className="text-xl">🍞</span>
+                    <span className="font-medium text-gray-900">Shwarma Bread</span>
+                  </Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                      Rs
+                    </span>
+                    <Input
+                      type="number"
+                      name="shwarmabread"
+                      value={expenses.shwarmabread}
+                      onChange={handleChange}
+                      placeholder="0"
+                      className="pl-8 font-mono text-lg py-6"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <span className="text-xl">🍖</span>
+                    <span className="font-medium text-gray-900">Kebab</span>
+                  </Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                      Rs
+                    </span>
+                    <Input
+                      type="number"
+                      name="kebab"
+                      value={expenses.kebab}
+                      onChange={handleChange}
+                      placeholder="0"
+                      className="pl-8 font-mono text-lg py-6"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <span className="text-xl">🍗</span>
+                    <span className="font-medium text-gray-900">Chicken Paste</span>
+                  </Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                      Rs
+                    </span>
+                    <Input
+                      type="number"
+                      name="chickenPaste"
+                      value={expenses.chickenPaste}
+                      onChange={handleChange}
+                      placeholder="0"
+                      className="pl-8 font-mono text-lg py-6"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <span className="text-xl">🥤</span>
+                    <span className="font-medium text-gray-900">Cold Drinks</span>
+                  </Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                      Rs
+                    </span>
+                    <Input
+                      type="number"
+                      name="coldDrinks"
+                      value={expenses.coldDrinks}
+                      onChange={handleChange}
+                      placeholder="0"
+                      className="pl-8 font-mono text-lg py-6"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -255,29 +330,63 @@ export function Expenses() {
                 <span>Staff Payments</span>
               </h4>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {DEFAULT_STAFF_MEMBERS.map(staff => (
-                  <div key={staff.key} className="space-y-1">
-                    <Label htmlFor={staff.key} className="text-xs flex items-center gap-1">
-                      <span>{staff.icon}</span>
-                      <span>{staff.name}</span>
-                    </Label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">
-                        Rs
-                      </span>
-                      <Input
-                        id={staff.key}
-                        type="number"
-                        min="0"
-                        step="1"
-                        value={values[staff.key] || ''}
-                        onChange={(e) => handleChange(staff.key, e.target.value)}
-                        placeholder="0"
-                        className="pl-8 font-mono text-sm py-2 h-10"
-                      />
-                    </div>
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <span className="text-xl">👨‍💼</span>
+                    <span className="font-medium text-gray-900">Rafee Payment</span>
+                  </Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                      Rs
+                    </span>
+                    <Input
+                      type="number"
+                      name="rafeePayment"
+                      value={expenses.rafeePayment}
+                      onChange={handleChange}
+                      placeholder="0"
+                      className="pl-8 font-mono text-lg py-6"
+                    />
                   </div>
-                ))}
+                </div>
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <span className="text-xl">👨‍💼</span>
+                    <span className="font-medium text-gray-900">Adil Payment</span>
+                  </Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                      Rs
+                    </span>
+                    <Input
+                      type="number"
+                      name="adilPayment"
+                      value={expenses.adilPayment}
+                      onChange={handleChange}
+                      placeholder="0"
+                      className="pl-8 font-mono text-lg py-6"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <span className="text-xl">👨‍💼</span>
+                    <span className="font-medium text-gray-900">Aamir Payment</span>
+                  </Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                      Rs
+                    </span>
+                    <Input
+                      type="number"
+                      name="aamirPayment"
+                      value={expenses.aamirPayment}
+                      onChange={handleChange}
+                      placeholder="0"
+                      className="pl-8 font-mono text-lg py-6"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -288,29 +397,120 @@ export function Expenses() {
                 <span>Other Expenses</span>
               </h4>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {OTHER_EXPENSES.map(expense => (
-                  <div key={expense.key} className="space-y-1">
-                    <Label htmlFor={expense.key} className="text-xs flex items-center gap-1">
-                      <span>{expense.icon}</span>
-                      <span>{expense.name}</span>
-                    </Label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">
-                        Rs
-                      </span>
-                      <Input
-                        id={expense.key}
-                        type="number"
-                        min="0"
-                        step="1"
-                        value={values[expense.key] || ''}
-                        onChange={(e) => handleChange(expense.key, e.target.value)}
-                        placeholder="0"
-                        className="pl-8 font-mono text-sm py-2 h-10"
-                      />
-                    </div>
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <span className="text-xl">⚡</span>
+                    <span className="font-medium text-gray-900">Electricity</span>
+                  </Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                      Rs
+                    </span>
+                    <Input
+                      type="number"
+                      name="electricity"
+                      value={expenses.electricity}
+                      onChange={handleChange}
+                      placeholder="0"
+                      className="pl-8 font-mono text-lg py-6"
+                    />
                   </div>
-                ))}
+                </div>
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <span className="text-xl">🗑️</span>
+                    <span className="font-medium text-gray-900">Disposable Items</span>
+                  </Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                      Rs
+                    </span>
+                    <Input
+                      type="number"
+                      name="disposableItems"
+                      value={expenses.disposableItems}
+                      onChange={handleChange}
+                      placeholder="0"
+                      className="pl-8 font-mono text-lg py-6"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <span className="text-xl">🛠️</span>
+                    <span className="font-medium text-gray-900">Maintenance</span>
+                  </Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                      Rs
+                    </span>
+                    <Input
+                      type="number"
+                      name="maintenance"
+                      value={expenses.maintenance}
+                      onChange={handleChange}
+                      placeholder="0"
+                      className="pl-8 font-mono text-lg py-6"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <span className="text-xl">⛽</span>
+                    <span className="font-medium text-gray-900">Bike Fuel</span>
+                  </Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                      Rs
+                    </span>
+                    <Input
+                      type="number"
+                      name="bikeFuel"
+                      value={expenses.bikeFuel}
+                      onChange={handleChange}
+                      placeholder="0"
+                      className="pl-8 font-mono text-lg py-6"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <span className="text-xl">👨‍💼</span>
+                    <span className="font-medium text-gray-900">Security Guard</span>
+                  </Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                      Rs
+                    </span>
+                    <Input
+                      type="number"
+                      name="securityguard"
+                      value={expenses.securityguard}
+                      onChange={handleChange}
+                      placeholder="0"
+                      className="pl-8 font-mono text-lg py-6"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <span className="text-xl">🧾</span>
+                    <span className="font-medium text-gray-900">Other Expenses</span>
+                  </Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                      Rs
+                    </span>
+                    <Input
+                      type="number"
+                      name="other"
+                      value={expenses.other}
+                      onChange={handleChange}
+                      placeholder="0"
+                      className="pl-8 font-mono text-lg py-6"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -331,7 +531,7 @@ export function Expenses() {
                     </div>
                   ))}
                 </div>
-                
+
                 {/* Total */}
                 <div className="flex justify-between items-center border-t pt-2">
                   <span className="font-medium text-gray-900">Total Expenses</span>
@@ -339,15 +539,15 @@ export function Expenses() {
                     <p className="text-2xl font-bold text-red-700">{formatCurrency(total)}</p>
                     {total > 0 && (
                       <p className="text-xs text-gray-600 mt-1">
-                        {Object.values(values).filter(v => v > 0).length} expense items
+                        {Object.values(expenses).filter(v => v > 0).length} expense items
                       </p>
                     )}
                   </div>
                 </div>
               </div>
-              
-              <Button 
-                type="submit" 
+
+              <Button
+                type="submit"
                 disabled={isLoading}
                 className="w-full py-6 text-lg mt-4"
               >

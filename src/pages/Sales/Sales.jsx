@@ -15,7 +15,7 @@ import { db } from "@/firebase/firebaseConfig";
 export function Sales() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isLoading, setIsLoading] = useState(false);
-  const adminUID = localStorage.getItem("adminUID"); // Replace with actual admin UID
+  const adminUID = localStorage.getItem("adminsUID"); // Replace with actual admin UID
   const [salesData, setSalesData] = useState({
     biryani: "",
     burger: "",
@@ -34,11 +34,11 @@ export function Sales() {
   // Handle input change
   const handleChange = (e) => {
      const {name, value} = e.target;
-     setSalesData((prev) => ({...prev, [name]: Number(value)}) );
+     setSalesData((prev) => ({...prev, [name]: value === "" ? "" : Number(value)}));
   };
 
   // Calculate total
-  const total = Object.values(salesData)?.reduce((sum, val) => sum + val, 0);
+  const total = Object.values(salesData)?.reduce((sum, val) => sum + (Number(val) || 0), 0);
 
   // Handle form submit
   const handleSubmit = async(e) => {
