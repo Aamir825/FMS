@@ -20,6 +20,8 @@ import {
 } from 'lucide-react';
 import { format, addDays, subDays, isToday, isSameDay, startOfWeek, addWeeks, subWeeks } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { db } from "@/firebase/firebaseConfig";
 
 // Mock data for demonstration
 const mockDailyData = {
@@ -88,6 +90,86 @@ export function DailyView() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [weekStart, setWeekStart] = useState(startOfWeek(new Date(), { weekStartsOn: 0 }));
   const [weekDates, setWeekDates] = useState([]);
+  const [salesData, setSalesData] = useState(null);
+  const [expenseData, setExpenseData] = useState(null);
+  const adminsUID = localStorage.getItem("adminsUID");
+
+
+  useEffect(() => {
+  const fetchDailyData = async () => {
+    const start = new Date(selectedDate);
+    start.setHours(0, 0, 0, 0);
+
+    const end = new Date(selectedDate);
+    end.setHours(23, 59, 59, 999);
+
+    // SALES
+    const salesQuery = query(
+      collection(db, "admin", adminsUID, "sales"),
+      where("date", ">=", start),
+      where("date", "<=", end)
+    );
+
+    // EXPENSES
+    const expenseQuery = query(
+      collection(db, "admin", adminsUID, "expenses"),
+      where("date", ">=", start),
+      where("date", "<=", end)
+    );
+
+    const salesSnap = await getDocs(salesQuery);
+    const expenseSnap = await getDocs(expenseQuery);
+
+    setSalesData(salesSnap.docs[0]?.data() || null);
+    setExpenseData(expenseSnap.docs[0]?.data() || null);
+  };
+
+  fetchDailyData();
+}, [selectedDate]);
+
+const sumObjectValues = (obj) =>
+  Object.entries(obj || {})
+    .filter(([key]) => key !== "date")
+    .reduce((sum, [, val]) => sum + Number(val || 0), 0);
+
+const totalSales = sumObjectValues(salesData);
+const totalExpenses = sumObjectValues(expenseData);
+const profit = totalSales - totalExpenses;
+
+const buildTransactions = () => {
+  const items = [];
+
+  if (salesData) {
+    Object.entries(salesData).forEach(([key, value]) => {
+      if (key !== "date") {
+        items.push({
+          id: `sale-${key}`,
+          type: "sale",
+          amount: value,
+          description: key,
+          category: "food"
+        });
+      }
+    });
+  }
+
+  if (expenseData) {
+    Object.entries(expenseData).forEach(([key, value]) => {
+      if (key !== "date") {
+        items.push({
+          id: `expense-${key}`,
+          type: "expense",
+          amount: value,
+          description: key,
+          category: "other"
+        });
+      }
+    });
+  }
+
+  return items;
+};
+
 
   // Generate week dates
   useEffect(() => {
@@ -127,7 +209,13 @@ export function DailyView() {
     };
   };
 
-  const selectedData = getDailyData(selectedDate);
+  const selectedData = {
+  sales: totalSales,
+  expenses: totalExpenses,
+  profit,
+  transactions: buildTransactions().length,
+  items: buildTransactions()
+};
 
   // Stats for selected day
   const stats = [
@@ -286,72 +374,152 @@ export function DailyView() {
       </div>
 
       {/* Recent Transactions */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Today's Transactions</h3>
-            <span className="text-sm text-gray-600">
-              {selectedData.items.length} transactions
-            </span>
-          </div>
+      <Card className="bg-white border-0 shadow-lg rounded-2xl overflow-hidden">
+  <CardContent className="p-6">
+    <div className="mb-6">
+      <h3 className="text-xl font-bold text-gray-900">Today's Financial Overview</h3>
+      <p className="text-gray-500 text-sm">Real-time transaction breakdown</p>
+    </div>
 
-          {selectedData.items.length > 0 ? (
-            <div className="space-y-3">
-              {selectedData.items.map((item) => {
+    {selectedData.items.length > 0 ? (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Income Column */}
+        <div className="bg-linear-to-b from-green-50 to-white p-5 rounded-xl border border-green-100">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h4 className="font-semibold text-green-800">Income</h4>
+              <p className="text-sm text-green-600">Sales & Revenue</p>
+            </div>
+            <div className="text-right">
+              <div className="text-lg font-bold text-green-700">
+                {formatCurrency(
+                  selectedData.items
+                    .filter(item => item.type === 'sale')
+                    .reduce((acc, item) => acc + item.amount, 0)
+                )}
+              </div>
+              <div className="text-xs text-green-500">
+                {selectedData.items.filter(item => item.type === 'sale').length} transactions
+              </div>
+            </div>
+          </div>
+          
+          <div className="space-y-3">
+            {selectedData.items
+              .filter(item => item.type === 'sale')
+              .map((item) => {
                 const Icon = categoryIcons[item.category] || categoryIcons.other;
                 const categoryColor = categoryColors[item.category] || categoryColors.other;
                 
                 return (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
+                  <div key={item.id} className="flex items-center justify-between p-3 bg-white rounded-lg border border-green-50 hover:border-green-200 transition-colors">
                     <div className="flex items-center gap-3">
-                      <div className={cn("p-2 rounded-lg", categoryColor.split(' ')[0])}>
-                        <Icon className={cn("h-5 w-5", categoryColor.split(' ')[1])} />
+                      <div className={`p-2 rounded-lg ${categoryColor.split(' ')[0]} bg-opacity-10`}>
+                        <Icon className={`h-4 w-4 ${categoryColor.split(' ')[1]}`} />
                       </div>
                       <div>
-                        <h4 className="font-medium text-gray-900">{item.description}</h4>
-                        <div className="flex items-center gap-3 mt-1 text-sm text-gray-600">
-                          <span className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            {item.time}
-                          </span>
-                          <span className={cn(
-                            "px-2 py-0.5 text-xs font-medium rounded",
-                            item.type === 'sale' 
-                              ? "bg-green-100 text-green-800" 
-                              : "bg-red-100 text-red-800"
-                          )}>
-                            {item.type === 'sale' ? 'Sale' : 'Expense'}
-                          </span>
-                        </div>
+                        <p className="font-medium text-gray-900 text-sm">{item.description}</p>
+                        <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                          <Clock className="h-3 w-3" />
+                          {item.time}
+                        </p>
                       </div>
                     </div>
-                    
-                    <div className="text-right">
-                      <p className={cn(
-                        "text-lg font-bold",
-                        item.type === 'sale' ? "text-green-700" : "text-red-700"
-                      )}>
-                        {item.type === 'sale' ? '+' : '-'}{formatCurrency(item.amount)}
-                      </p>
+                    <div className="font-semibold text-green-700 text-sm">
+                      +{formatCurrency(item.amount)}
                     </div>
                   </div>
                 );
               })}
+          </div>
+        </div>
+
+        {/* Expenses Column */}
+        <div className="bg-linear-to-b from-red-50 to-white p-5 rounded-xl border border-red-100">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h4 className="font-semibold text-red-800">Expenses</h4>
+              <p className="text-sm text-red-600">Costs & Purchases</p>
             </div>
-          ) : (
-            <div className="text-center py-8">
-              <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                <Receipt className="h-8 w-8 text-gray-400" />
+            <div className="text-right">
+              <div className="text-lg font-bold text-red-700">
+                {formatCurrency(
+                  selectedData.items
+                    .filter(item => item.type === 'expense')
+                    .reduce((acc, item) => acc + item.amount, 0)
+                )}
               </div>
-              <p className="text-gray-600">No transactions recorded for this day</p>
-              <p className="text-sm text-gray-500 mt-1">Add sales and expenses to see data here</p>
+              <div className="text-xs text-red-500">
+                {selectedData.items.filter(item => item.type === 'expense').length} transactions
+              </div>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </div>
+          
+          <div className="space-y-3">
+            {selectedData.items
+              .filter(item => item.type === 'expense')
+              .map((item) => {
+                const Icon = categoryIcons[item.category] || categoryIcons.other;
+                const categoryColor = categoryColors[item.category] || categoryColors.other;
+                
+                return (
+                  <div key={item.id} className="flex items-center justify-between p-3 bg-white rounded-lg border border-red-50 hover:border-red-200 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg ${categoryColor.split(' ')[0]} bg-opacity-10`}>
+                        <Icon className={`h-4 w-4 ${categoryColor.split(' ')[1]}`} />
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900 text-sm">{item.description}</p>
+                        <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                          <Clock className="h-3 w-3" />
+                          {item.time}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="font-semibold text-red-700 text-sm">
+                      -{formatCurrency(item.amount)}
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+      </div>
+    ) : (
+      <div className="text-center py-12">
+        <div className="w-20 h-20 mx-auto mb-5 bg-gray-100 rounded-2xl flex items-center justify-center">
+          <Receipt className="h-10 w-10 text-gray-400" />
+        </div>
+        <p className="text-gray-700 mb-2">No transactions recorded today</p>
+        <p className="text-gray-500 text-sm">Start tracking your financial activity</p>
+      </div>
+    )}
+
+    {/* Summary Stats */}
+    {selectedData.items.length > 0 && (
+      <div className="mt-6 p-5 bg-gray-50 rounded-xl border border-gray-200">
+        <div className="grid grid-cols-3 gap-4">
+          <div className="text-center">
+            <div className="text-2xl font-bold text-gray-900">{selectedData.items.length}</div>
+            <div className="text-sm text-gray-600">Total Transactions</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-green-700">
+              {selectedData.items.filter(item => item.type === 'sale').length}
+            </div>
+            <div className="text-sm text-gray-600">Income Items</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-red-700">
+              {selectedData.items.filter(item => item.type === 'expense').length}
+            </div>
+            <div className="text-sm text-gray-600">Expense Items</div>
+          </div>
+        </div>
+      </div>
+    )}
+  </CardContent>
+</Card>
 
       {/* Summary Card - FIXED VERSION */}
       <Card>

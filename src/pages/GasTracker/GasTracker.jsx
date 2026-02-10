@@ -9,27 +9,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { 
-  Flame, 
-  AlertTriangle, 
-  Clock, 
-  Plus, 
-  History,
-  TrendingUp,
-  Calendar,
-  DollarSign,
-  Zap
-} from 'lucide-react';
-
-// Mock data for gas refills
-const mockRefills = [
-  { id: 1, type: 'big', date: new Date().setDate(new Date().getDate() - 5), cost: 3500 },
-  { id: 2, type: 'small', date: new Date().setDate(new Date().getDate() - 2), cost: 1800 },
-  { id: 3, type: 'big', date: new Date().setDate(new Date().getDate() - 15), cost: 3400 },
-  { id: 4, type: 'small', date: new Date().setDate(new Date().getDate() - 12), cost: 1750 },
-  { id: 5, type: 'big', date: new Date().setDate(new Date().getDate() - 25), cost: 3450 },
-  { id: 6, type: 'small', date: new Date().setDate(new Date().getDate() - 22), cost: 1780 },
-];
+import { Flame, AlertTriangle, Clock, Plus, History,TrendingUp,Calendar,DollarSign,Zap} from 'lucide-react';
+import { addDoc, collection, onSnapshot, query } from "firebase/firestore";
+import { db } from "@/firebase/firebaseConfig";
 
 // Gas cylinder configurations
 const GAS_CONFIG = {
@@ -60,18 +42,27 @@ export function GasTracker() {
   const [refillDialog, setRefillDialog] = useState(null); // 'big' | 'small' | null
   const [cost, setCost] = useState('');
   const [stats, setStats] = useState(null);
-  const [isMobile, setIsMobile] = useState(false);
+  const adminsUID = localStorage.getItem("adminsUID");
 
-  // Initialize data and check screen size
   useEffect(() => {
-    setRefills(mockRefills);
-    calculateStats();
-    
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+  const q = query(
+    collection(db, "admin", adminsUID, "gasRefills"));
+
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const data = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+
+    setRefills(data);
+  });
+
+  return () => unsubscribe();
+}, []);
+
+useEffect(() => {
+  calculateStats();
+}, [refills]);
 
   // Calculate statistics
   const calculateStats = () => {
@@ -147,32 +138,26 @@ export function GasTracker() {
   };
 
   // Handle refill submission
-  const handleRefill = () => {
-    if (refillDialog && cost) {
-      const newRefill = {
-        id: refills.length + 1,
-        type: refillDialog,
-        date: new Date().getTime(),
-        cost: parseFloat(cost)
-      };
-      
-      const newRefills = [...refills, newRefill];
-      setRefills(newRefills);
-      calculateStats();
-      setCost('');
-      setRefillDialog(null);
-    }
-  };
+  const handleRefill = async () => {
+  if (!refillDialog || !cost) return;
 
-  // Format currency
+  try {
+    await addDoc(collection(db, "admin", adminsUID, "gasRefills"), {
+      type: refillDialog,
+      cost: Number(cost),
+      date: Date.now(),
+    });
+
+    setCost("");
+    setRefillDialog(null);
+  } catch (error) {
+    console.error("Error saving refill:", error);
+  }
+};
+
+  
   const formatCurrency = (amount) => {
-    return `₹${amount.toLocaleString('en-IN')}`;
-  };
-
-  // Format date
-  const formatDate = (date) => {
-    if (!date) return 'N/A';
-    return format(new Date(date), 'MMM d, yyyy');
+    return `Rs ${amount.toLocaleString('en-IN')}`;
   };
 
   // Format date with time
@@ -335,7 +320,7 @@ export function GasTracker() {
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
-            size={isMobile ? "sm" : "default"}
+            // size={isMobile ? "sm" : "default"}
             className="gap-2"
             onClick={() => {
               // Export functionality
@@ -343,7 +328,7 @@ export function GasTracker() {
             }}
           >
             <TrendingUp className="h-4 w-4" />
-            <span className="hidden sm:inline">Analytics</span>
+            <span className="hidden sm:inline">Export</span>
           </Button>
         </div>
       </div>
@@ -455,14 +440,14 @@ export function GasTracker() {
                         <span className="font-medium text-gray-900">{month}</span>
                         <span className="font-bold text-green-700">{formatCurrency(monthlyData[month].total)}</span>
                       </div>
-                      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
                         <div className="flex h-full">
                           <div 
-                            className="bg-orange-500"
+                            className="bg-orange-600 rounded-br-full rounded-tr-full"
                             style={{ width: `${(monthlyData[month].big / monthlyData[month].total) * 100}%` }}
                           />
                           <div 
-                            className="bg-blue-500"
+                            className="bg-blue-600 rounded-bl-full rounded-tl-full"
                             style={{ width: `${(monthlyData[month].small / monthlyData[month].total) * 100}%` }}
                           />
                         </div>
@@ -500,10 +485,10 @@ export function GasTracker() {
           </DialogHeader>
           <div className="space-y-4 pt-4">
             <div className="space-y-2">
-              <Label>Refill Cost (₹)</Label>
+              <Label>Refill Cost (Rs)</Label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
-                  ₹
+                  Rs
                 </span>
                 <Input 
                   type="number" 
@@ -527,7 +512,7 @@ export function GasTracker() {
                   onClick={() => setCost(suggestedCost.toString())}
                   className="text-sm"
                 >
-                  ₹{suggestedCost.toLocaleString()}
+                  Rs {suggestedCost.toLocaleString()}
                 </Button>
               ))}
             </div>
