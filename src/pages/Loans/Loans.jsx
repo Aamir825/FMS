@@ -11,11 +11,11 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { 
-  Plus, 
-  DollarSign, 
-  Check, 
-  Trash2, 
+import {
+  Plus,
+  DollarSign,
+  Check,
+  Trash2,
   ChevronRight,
   Users,
   TrendingUp,
@@ -25,80 +25,39 @@ import {
   User,
   Package
 } from 'lucide-react';
-
-// Mock data for loans
-const mockLoans = [
-  {
-    id: '1',
-    personName: 'Rafee Ahmed',
-    items: 'Biryani x 5, Drinks x 10',
-    totalAmount: 2500,
-    paidAmount: 1500,
-    date: new Date().setDate(new Date().getDate() - 5),
-    isPaid: false
-  },
-  {
-    id: '2',
-    personName: 'Adil Khan',
-    items: 'Full meal for family',
-    totalAmount: 1800,
-    paidAmount: 1800,
-    date: new Date().setDate(new Date().getDate() - 10),
-    isPaid: true
-  },
-  {
-    id: '3',
-    personName: 'Aamir Siddiqui',
-    items: 'Biryani x 3, Chicken karahi',
-    totalAmount: 3200,
-    paidAmount: 1200,
-    date: new Date().setDate(new Date().getDate() - 3),
-    isPaid: false
-  },
-  {
-    id: '4',
-    personName: 'Yaseen Ali',
-    items: 'Snacks and drinks',
-    totalAmount: 850,
-    paidAmount: 850,
-    date: new Date().setDate(new Date().getDate() - 15),
-    isPaid: true
-  }
-];
-
-// Mock payment history
-const mockPayments = {
-  '1': [
-    { id: '1-1', loanId: '1', amount: 500, date: new Date().setDate(new Date().getDate() - 4), note: 'First payment' },
-    { id: '1-2', loanId: '1', amount: 1000, date: new Date().setDate(new Date().getDate() - 2), note: 'Second payment' }
-  ],
-  '3': [
-    { id: '3-1', loanId: '3', amount: 1200, date: new Date().setDate(new Date().getDate() - 1), note: 'Partial payment' }
-  ],
-  '2': [
-    { id: '2-1', loanId: '2', amount: 1800, date: new Date().setDate(new Date().getDate() - 8), note: 'Full payment' }
-  ],
-  '4': [
-    { id: '4-1', loanId: '4', amount: 850, date: new Date().setDate(new Date().getDate() - 13), note: 'Full payment' }
-  ]
-};
+import { addDoc, arrayUnion, collection, deleteDoc, doc, getDocs, serverTimestamp, updateDoc } from "firebase/firestore";
+import { db } from "@/firebase/firebaseConfig";
 
 export function Loans() {
   const [loans, setLoans] = useState([]);
   const [payments, setPayments] = useState({});
   const [activeTab, setActiveTab] = useState('active');
   const [isLoading, setIsLoading] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const adminUID = localStorage.getItem("adminsUID");
 
-  // Initialize data and check screen size
+  // Fetch loans from Firestore on component mount
   useEffect(() => {
-    setLoans(mockLoans);
-    setPayments(mockPayments);
-    
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    const fetchLoans = async () => {
+      setIsLoading(true);
+      const snapshot = await getDocs(collection(db, "admin", adminUID, "loans"));
+      const data = snapshot.docs.map(doc => {
+        const loanData = doc.data();
+
+        return {
+          id: doc.id,
+          ...loanData,
+          date: loanData.date?.toDate?.() || null, // 🔥 convert timestamp
+          payments: loanData.payments?.map(p => ({
+            ...p,
+            date: p.date?.toDate?.() || p.date
+          })) || []
+        };
+      });
+      setLoans(data);
+      setIsLoading(false);
+    };
+
+    fetchLoans();
   }, []);
 
   // Format currency
@@ -132,80 +91,79 @@ export function Loans() {
       .filter(loan => !loan.isPaid)
       .reduce((sum, loan) => sum + (loan.totalAmount - loan.paidAmount), 0);
   };
-
-  // Add a new loan
-  const addLoan = (personName, items, totalAmount) => {
-    const newLoan = {
-      id: (loans.length + 1).toString(),
+  // Add new loan
+  const addLoan = async (personName, items, totalAmount) => {
+    const docRef = await addDoc(collection(db, "admin", adminUID, "loans"), {
       personName,
       items,
       totalAmount,
       paidAmount: 0,
-      date: new Date().getTime(),
-      isPaid: false
-    };
-    
-    setLoans([...loans, newLoan]);
-    setPayments({...payments, [newLoan.id]: []});
-  };
+      isPaid: false,
+      date: new Date(),
+    });
 
-  // Record a payment
-  const recordPayment = (loanId, amount, note) => {
-    const newPayment = {
-      id: `${loanId}-${Date.now()}`,
-      loanId,
-      amount,
-      date: new Date().getTime(),
-      note: note || ''
-    };
-    
-    // Update payments
-    setPayments(prev => ({
+    setLoans(prev => [
       ...prev,
-      [loanId]: [...(prev[loanId] || []), newPayment]
-    }));
-    
-    // Update loan paid amount
-    setLoans(prev => prev.map(loan => {
-      if (loan.id === loanId) {
-        const newPaidAmount = loan.paidAmount + amount;
-        return {
-          ...loan,
-          paidAmount: newPaidAmount,
-          isPaid: newPaidAmount >= loan.totalAmount
-        };
+      {
+        id: docRef.id,
+        personName,
+        items,
+        totalAmount,
+        paidAmount: 0,
+        isPaid: false,
+        date: new Date(),
       }
-      return loan;
-    }));
+    ]);
   };
 
-  // Mark as paid
-  const markAsPaid = (loanId) => {
-    setLoans(prev => prev.map(loan => {
-      if (loan.id === loanId) {
-        return {
-          ...loan,
-          paidAmount: loan.totalAmount,
-          isPaid: true
-        };
-      }
-      return loan;
-    }));
+  // Record payment
+  const recordPayment = async (loanId, amount, note) => {
+    const loanRef = doc(db, "admin", adminUID, "loans", loanId);
+
+    const loan = loans.find(l => l.id === loanId);
+    const newPaidAmount = loan.paidAmount + amount;
+    const isFullyPaid = newPaidAmount >= loan.totalAmount;
+
+    const newPayment = {
+      amount,
+      note,
+      date: new Date()
+    };
+
+    await updateDoc(loanRef, {
+      paidAmount: newPaidAmount,
+      isPaid: isFullyPaid,
+      payments: arrayUnion(newPayment)
+    });
+
+    // ✅ Update local state immediately
+    setLoans(prev =>
+      prev.map(l =>
+        l.id === loanId
+          ? {
+            ...l,
+            paidAmount: newPaidAmount,
+            isPaid: isFullyPaid,
+            payments: [...(l.payments || []), newPayment]
+          }
+          : l
+      )
+    );
   };
 
-  // Delete a loan
-  const deleteLoan = (loanId) => {
-    if (window.confirm('Are you sure you want to delete this loan?')) {
-      setLoans(prev => prev.filter(loan => loan.id !== loanId));
-      const newPayments = {...payments};
-      delete newPayments[loanId];
-      setPayments(newPayments);
-    }
+
+  // Delete loan
+  const deleteLoan = async (loanId) => {
+    if (!confirm("Delete this loan?")) return;
+
+    await deleteDoc(doc(db, "admin", adminUID, "loans", loanId));
+    setLoans(prev => prev.filter(l => l.id !== loanId));
   };
+
 
   // Loan Card Component
   const LoanCard = ({ loan }) => {
-    const loanPayments = payments[loan.id] || [];
+    const loanPayments = loan.payments || [];
     const remainingAmount = loan.totalAmount - loan.paidAmount;
     const progressPercentage = (loan.paidAmount / loan.totalAmount) * 100;
     const isOverdue = !loan.isPaid && (new Date() - new Date(loan.date)) > (7 * 24 * 60 * 60 * 1000);
@@ -251,7 +209,7 @@ export function Loans() {
             </Badge>
           </div>
         </CardHeader>
-        
+
         <CardContent>
           {/* Loan details */}
           <div className="mb-4 space-y-2">
@@ -348,8 +306,8 @@ export function Loans() {
                         );
                       })}
                     </div>
-                    <Button 
-                      onClick={handlePayment} 
+                    <Button
+                      onClick={handlePayment}
                       disabled={!paymentAmount || parseFloat(paymentAmount) <= 0}
                       className="w-full"
                     >
@@ -358,16 +316,6 @@ export function Loans() {
                   </div>
                 </DialogContent>
               </Dialog>
-              
-              <Button 
-                size="sm" 
-                variant="outline" 
-                onClick={() => markAsPaid(loan.id)}
-                className="gap-1"
-              >
-                <Check className="h-3.5 w-3.5" />
-                Mark Paid
-              </Button>
             </div>
           )}
 
@@ -482,8 +430,8 @@ export function Loans() {
                 />
               </div>
             </div>
-            <Button 
-              onClick={handleSubmit} 
+            <Button
+              onClick={handleSubmit}
               disabled={!personName || !amount || parseFloat(amount) <= 0}
               className="w-full"
             >
@@ -513,11 +461,10 @@ export function Loans() {
             Outstanding: <span className="font-bold text-red-700">{formatCurrency(totalOutstanding)}</span>
           </p>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
-            size={isMobile ? "sm" : "default"}
             className="gap-2"
             onClick={() => {
               // Export functionality
@@ -541,7 +488,7 @@ export function Loans() {
             <p className="text-lg md:text-xl font-bold text-red-700">{formatCurrency(totalOutstanding)}</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2 text-green-600 mb-2">
@@ -551,7 +498,7 @@ export function Loans() {
             <p className="text-lg md:text-xl font-bold text-green-700">{formatCurrency(totalPaidAmount)}</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2 text-blue-600 mb-2">
@@ -561,7 +508,7 @@ export function Loans() {
             <p className="text-lg md:text-xl font-bold text-gray-900">{totalCustomers}</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2 text-orange-600 mb-2">
@@ -588,7 +535,7 @@ export function Loans() {
             <Badge variant="secondary" className="ml-2">{paidLoans.length}</Badge>
           </TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="active" className="space-y-4 mt-4">
           {activeLoans.length === 0 ? (
             <div className="text-center py-8">
@@ -606,7 +553,7 @@ export function Loans() {
             </div>
           )}
         </TabsContent>
-        
+
         <TabsContent value="paid" className="space-y-4 mt-4">
           {paidLoans.length === 0 ? (
             <div className="text-center py-8">
@@ -649,7 +596,7 @@ export function Loans() {
                 </p>
               </div>
             </div>
-            
+
             <div className="pt-4 border-t">
               <h4 className="font-medium text-gray-900 mb-3">Top Customers</h4>
               <div className="space-y-2">

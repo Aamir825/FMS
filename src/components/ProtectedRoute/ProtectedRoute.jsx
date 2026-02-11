@@ -2,13 +2,13 @@ import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom';
 
 const ProtectedRoute = ({ children }) => {
-  const adminUID = localStorage.getItem("adminUID");
+  const adminsUID = localStorage.getItem("adminsUID");
   const navigate = useNavigate();
   useEffect(() => {
-    if (!adminUID) {
+    if (!adminsUID) {
       navigate('/login');
     }
-    }, [adminUID]);
+    }, [adminsUID]);
     return <>{children}</>
 }
 
