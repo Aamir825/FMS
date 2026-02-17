@@ -385,7 +385,7 @@ export function Loans() {
     return (
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button className="w-full gap-2">
+          <Button className=" gap-2">
             <Plus className="h-4 w-4" />
             Add New Credit Entry
           </Button>
@@ -524,13 +524,13 @@ export function Loans() {
       <AddLoanForm />
 
       {/* Loans Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="w-full">
-          <TabsTrigger value="active" className="flex-1">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="">
+        <TabsList className=" rounded-full">
+          <TabsTrigger value="active" className=" rounded-full">
             <span>Active</span>
             <Badge variant="secondary" className="ml-2">{activeLoans.length}</Badge>
           </TabsTrigger>
-          <TabsTrigger value="paid" className="flex-1">
+          <TabsTrigger value="paid" className=" rounded-full">
             <span>Paid</span>
             <Badge variant="secondary" className="ml-2">{paidLoans.length}</Badge>
           </TabsTrigger>
